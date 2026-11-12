@@ -1,0 +1,1 @@
+{"name":"vinmed-track-1-prototype","private":true,"version":"1.0.0","scripts":{"start":"node scripts/serve.cjs","test":"node --test --test-isolation=none tests/*.test.cjs"}}
