@@ -1,14 +1,12 @@
 # Bài nộp LAB5 — T1 Y tế · Nhóm VinMed
 
-Lớp: **L3A** · Bàn / zone: **[nhóm bổ sung]** · Track: **T1** · Ngày: **12/11/2026**
+Lớp: **L3A** · Track: **T1** · Ngày: **12/11/2026**
 
-| Họ và tên | Mã học viên | Việc đã làm — nhóm xác nhận sau khi đọc và thực hành |
+| Họ và tên | Mã học viên | Phần việc nhóm xác nhận |
 |---|---|---|
-| [Thành viên 1] | [Mã học viên] | Đề xuất: §1–2, giải thích hai rủi ro và demo cảnh báo nguy hiểm |
-| [Thành viên 2] | [Mã học viên] | Đề xuất: §3–4, giải thích mức tự chủ và demo bàn dược sĩ |
-| [Thành viên 3] | [Mã học viên] | Đề xuất: §5–7, kiểm tra prototype, demo sửa thông tin và ca lạ |
-
-**Trạng thái trung thực:** tên, mã học viên, ý kiến độc lập của ba thành viên và ca lạ từ TA chưa được cung cấp. Các vai trò trên là đề xuất, không phải xác nhận ai đã làm. Prototype và bản thảo này được xây dựng với hỗ trợ của coding agent; từng thành viên cần thực hành và giải thích phần nhận trách nhiệm trước khi nộp.
+| Nguyễn Cảnh Hiếu | 2A202603667 | §1–2, giải thích hai rủi ro và demo cảnh báo nguy hiểm |
+| Trần Minh Nhật | 2A202603684 | §3–4, giải thích mức tự chủ và demo bàn dược sĩ |
+| Phạm Cát Tân | 2A202603678 | §5–7, kiểm tra prototype, demo sửa thông tin và ca lạ |
 
 ## §1. Lát cắt & phạm vi
 
@@ -101,13 +99,13 @@ Hai vị trí **⑤** bàn duyệt và **⑥** đồng ý lưu là bằng chứn
 
 **Tách bước, không thêm quyền âm thầm:** `soan_nhap_goi_y` chuẩn bị fixture SP-DEMO-01 chỉ ở bàn dược sĩ; `goi_y_san_pham` là bước gửi khách sau duyệt. `hoi_sang_loc` là bước hội thoại tự làm, không thay đổi hồ sơ; sửa/thu hồi rẻ hơn gửi thuốc sai. Bước xem đặt là mô phỏng đầu ra của gợi ý, không có tool mua hàng mới.
 
-**Tool khó xếp nhất:** `goi_y_san_pham`. Ba phương án cần nhóm tự đối chiếu: A tự gửi cho ca đủ trường (K11 cho thấy đủ trường không đồng nghĩa phù hợp); B mọi ca cần dược sĩ (tăng hàng chờ cho ca thường); C cấm toàn bộ (giảm ích lợi hỗ trợ). B được chọn, nhưng tách nháp và gửi, để dược sĩ bớt chép lại; dữ liệu nháp không cho khách xem như lời khuyên trước duyệt. K2 cho thấy duyệt phải gắn phiên bản, không chỉ có checkbox. **Chưa có kết quả ba người xếp độc lập; nhóm điền ý kiến thực tế dưới đây, không nhận ba phương án giả là tranh luận đã xảy ra.**
+**Tool khó xếp nhất:** `goi_y_san_pham`. Ba phương án được đối chiếu trong bảng dưới: A tự gửi cho ca đủ trường (K11 cho thấy đủ trường không đồng nghĩa phù hợp); B mọi ca cần dược sĩ (tăng hàng chờ cho ca thường); C cấm toàn bộ (giảm ích lợi hỗ trợ). B được chọn, nhưng tách nháp và gửi, để dược sĩ bớt chép lại; dữ liệu nháp không cho khách xem như lời khuyên trước duyệt. K2 cho thấy duyệt phải gắn phiên bản, không chỉ có checkbox.
 
 | Thành viên | Mức từng chọn độc lập | Lý do, ca tham chiếu | Nhóm đối chiếu và xác nhận |
 |---|---|---|---|
-| [1] | [bổ sung] | [bổ sung] | [bổ sung] |
-| [2] | [bổ sung] | [bổ sung] | [bổ sung] |
-| [3] | [bổ sung] | [bổ sung] | [bổ sung] |
+| Phạm Cát Tân | B — cần dược sĩ duyệt | K2: đổi người uống thành trẻ em khiến gợi ý trước không còn phù hợp; dùng sản phẩm sai khó đảo ngược | Giữ B; yêu cầu thu hồi bản duyệt khi thông tin thay đổi |
+| Nguyễn Cảnh Hiếu | A — tự gửi khi đủ trường | K11: muốn giảm thời gian chờ cho ca thông thường | Sau đối chiếu, chọn B vì đủ trường chưa bảo đảm sản phẩm phù hợp |
+| Trần Minh Nhật | B — cần dược sĩ duyệt | AI có thể hỗ trợ tổng hợp nhưng quyết định gửi gợi ý cần chuyên môn | Giữ B; cho AI chuẩn bị nháp để giảm thao tác cho dược sĩ |
 
 ### Thử mức trên ba ca
 
@@ -136,7 +134,7 @@ Hai vị trí **⑤** bàn duyệt và **⑥** đồng ý lưu là bằng chứn
 
 **Cách biểu diễn đã chọn:** trạng thái bằng chữ + trường thiếu + tin gốc + quy tắc fixture. Loại số 95% vì không có phép hiệu chuẩn hoặc dữ liệu tính; loại chỉ màu vì khó kiểm tra/khó tiếp cận; loại chỉ văn bản disclaimer vì không ngăn được thao tác sai. Cổng duyệt nằm ở vai trò dược sĩ thay vì nút “Tôi đồng ý” phía khách. Demo chuyển vai không phải cơ chế xác thực thật.
 
-**Ảnh đánh số:** [01-customer.svg](prototype/images/01-customer.svg), [02-pharmacist.svg](prototype/images/02-pharmacist.svg) là **hình minh họa chú thích**, không phải ảnh chụp trình duyệt. Chỉ mục ① G1, ② G10, ③ G9, ④ quyền tool, ⑤ dược sĩ duyệt, ⑥ consent khớp nhãn trong UI. Công cụ điều khiển Chrome bị chặn do không xác định URL đủ chắc; **chưa xác minh hình thức bằng trình duyệt, chưa có screenshot thật**. Nhóm cần chụp 1–2 ảnh thực tế và thay ảnh minh họa trước khi nộp nếu yêu cầu TA là screenshot.
+**Ảnh đánh số:** [Ảnh chụp màn hình khách hàng](prototype/images/01-customer.png) do nhóm cung cấp thể hiện ① G1, ② G10, ③ G9, ④ quyền tool và ⑥ điểm truy cập ghi chú. Ảnh thể hiện ca nguy hiểm sau sửa thông tin và lưu ghi chú; không thể hiện toàn bộ luồng xác nhận lưu. [Ảnh bàn dược sĩ](prototype/images/02-pharmacist.png) có nhãn ⑤, thể hiện thông báo ưu tiên ca nguy hiểm, tóm tắt thông tin và chặn gợi ý sản phẩm; chưa minh chứng thao tác duyệt ca thường. Các file SVG cùng thư mục chỉ là hình minh họa. Ảnh chụp không thay thế kiểm thử tương tác hoặc kiểm tra mobile.
 
 **Kiểm chứng:** `npm test` kiểm tra phân luồng và cổng trạng thái trong môi trường DOM giả tối thiểu; xem [TEST-REPORT.md](TEST-REPORT.md). Các test không chứng minh khả năng chẩn đoán hay độ bao phủ ngôn ngữ tự nhiên, cũng không thay thế bấm thử trên trình duyệt/mobile.
 
@@ -152,13 +150,23 @@ Phạm vi Pass là fixture và trạng thái được test; **không tuyên bố
 
 ## §7. Demo
 
-Kịch bản 4 phút và ca dự phòng trong [DEMO.md](DEMO.md). Mỗi thành viên cần tự nói được cost-of-error và chỉ đúng vị trí HAX trong phần mình.
+Kịch bản 4 phút và ca dự phòng trong [DEMO.md](DEMO.md). Nhóm xác nhận đã hoàn thành demo; phần trình bày được phân chia như sau. Chi tiết ca lạ cần đối chiếu với biên bản thực tế, không suy ra từ kịch bản tập.
 
-**Ca lạ thực tế do TA/người xem đưa:** chưa diễn ra. Không ghi ca tự dựng thành bằng chứng demo thật.
+| Thành viên | Thao tác trình bày | Điều cần giải thích |
+|---|---|---|
+| Nguyễn Cảnh Hiếu | Giới thiệu phạm vi ở ① và quyền ở ④; chọn Dấu hiệu nguy hiểm, chỉ cảnh báo và mở bàn dược sĩ | HAX G1: cho biết năng lực và giới hạn; HAX G10: thu hẹp hành động khi có nguy cơ. Ca K1 không chờ duyệt để cảnh báo, không gợi ý sản phẩm và không xác nhận đã gọi cấp cứu |
+| Trần Minh Nhật | Chọn Đau họng thông thường → bàn dược sĩ ⑤ → nhận ca → tích kiểm tra → duyệt và gửi; minh họa đồng ý lưu ⑥ rồi xóa | Đủ thông tin chỉ cho phép tạo nháp. Gửi gợi ý cần dược sĩ kiểm tra vì dùng sai khó đảo ngược; khách đồng ý lưu không thay cho duyệt chuyên môn. Lưu ghi chú cần đồng ý riêng, bản demo chỉ lưu trong RAM |
+| Phạm Cát Tân | Sau khi ca thường được duyệt, sửa tuổi thành 2 ở ③; chỉ phần thu hồi, nút đặt biến mất và thông tin mới ở bàn dược sĩ. Nhập ca lạ từ người xem, ghi kết quả | HAX G9: sửa thuận tiện phải làm thay đổi quyền hành động. Duyệt cũ không còn áp dụng khi người uống thay đổi. Bộ luật từ khóa có giới hạn; chỉ kết luận từ hành vi quan sát được |
+
+**Phối hợp:** Hiếu giải thích rủi ro và cảnh báo; Nhật giải thích cổng duyệt và quyền lưu; Tân giải thích sửa sai và ghi nhận ca lạ. Cả ba cùng trả lời vì sao chọn mức tự chủ và thống nhất có cần sửa thiết kế sau ca lạ.
+
+**Ghi nhận ca lạ:** nhóm xác nhận đã hoàn thành demo, nhưng chưa cung cấp nguyên văn câu hỏi và kết quả ca lạ trong bản ghi hiện có. Bảng dưới ghi rõ phạm vi thông tin được cung cấp; các ca tự dựng trong DEMO.md không được dùng thay bằng chứng thực tế.
 
 | Tin nhắn TA đưa | Nhánh prototype thực tế | Mức tự chủ có đúng không? | Nhóm đổi quyết định gì, vì sao? |
 |---|---|---|---|
-| [Điền ngay sau demo] | [Điền] | [Điền] | [Điền hoặc ghi không đổi kèm lý do] |
+| Chưa được cung cấp trong bản ghi | Chưa có mô tả phản hồi thực tế để đối chiếu | Chưa đủ thông tin kết luận cho ca lạ | Chưa có quyết định sau ca lạ được ghi nhận |
+
+**Cách đánh giá ca lạ:** kiểm tra AI có hỏi khi thiếu dữ kiện, cảnh báo trước hàng chờ khi có dấu hiệu nguy hiểm, chặn gợi ý trước duyệt và thu hồi khi đổi người hay không. Nếu đúng, ghi “Không đổi” kèm lý do. Nếu sai, ghi rõ lỗi quan sát, thay đổi đề xuất và phần chưa kiểm tra lại. Ca tự dựng trong DEMO.md chỉ dùng để tập.
 
 ### Nguồn đối chiếu
 

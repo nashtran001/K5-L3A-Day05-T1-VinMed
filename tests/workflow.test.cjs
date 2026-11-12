@@ -17,3 +17,35 @@ test('Tin mới không kế thừa sàng lọc từ người trước',()=>{cons
 test('Tin HTML được hiển thị như chữ, không chèn thẻ thực thi',()=>{const a=app();a.run("receive('<img src=x onerror=alert(1)>')");assert.ok(a.node('#chat').innerHTML.includes('&lt;img'));assert.ok(!a.node('#chat').innerHTML.includes('<img'))});
 test('Ca kê đơn không có hành động bán, duyệt hoặc bước đặt',()=>{const a=app();a.run("init('rx')");assert.equal(a.run('s.result.route'),'prescription');assert.ok(!a.node('#staff-content').innerHTML.includes('id="approve"'));assert.ok(!a.node('#actions').innerHTML.includes('data-action="order"'))});
 test('Từ chối bản nháp không thể bị duyệt lại trong phiên bản đó',()=>{const a=app();a.run("init('normal');act('accept');act('reject')");a.node('#review-check').checked=true;a.node('#draft').value='Bản nháp';a.run("act('approve')");assert.equal(a.run('s.approved'),false)});
+
+test('Happy: hỏi quy trình không tạo hàng chờ hoặc nháp',()=>{
+ const a=app();a.run("init('screening-help')");assert.equal(a.run('s.result.route'),'info');assert.equal(a.run('s.queue'),false);assert.equal(a.run('s.approved'),false);
+});
+test('Happy: bổ sung từng tin giữ ngữ cảnh, chỉ chuyển khi đã tổng hợp đủ',()=>{
+ const a=app();a.run("init('screening-chat');receive('Mình 28 tuổi')");
+ assert.equal(a.run('s.facts.duration'),'2 ngay');assert.equal(a.run('s.queue'),false);
+ a.run("receive('Không mang thai và không cho con bú')");assert.equal(a.run('s.queue'),false);
+ a.run("receive('Không dùng thuốc, không bệnh nền và không dị ứng')");
+ assert.equal(a.run('s.result.route'),'review');assert.equal(a.run('s.facts.age'),'28');assert.equal(a.run('s.queue'),true);assert.equal(a.run('s.approved'),false);
+});
+test('Happy: sửa thông tin thuần túy không tạo triệu chứng hoặc chuyển người',()=>{
+ const a=app();a.run("init('profile')");
+ const target={elements:{age:{value:'30'},pregnancy:{value:'no'},meds:{value:'Không'},conditions:{value:'Không'},duration:{value:''}}};
+ a.node('#edit-form').onsubmit({preventDefault(){},target});
+ assert.equal(a.run('s.facts.age'),'30');assert.equal(a.run('s.queue'),false);assert.equal(a.run('s.saved'),null);assert.equal(a.run('s.lastInput'),undefined);
+});
+test('Happy: lưu và xóa ghi chú hoàn tất không cần người duyệt chuyên môn',()=>{
+ const a=app();a.run("init('profile');act('save')");assert.equal(a.node('#consent-check').checked,false);assert.equal(a.run('s.saved'),null);
+ a.node('#consent-check').checked=true;a.node('#consent-form').onsubmit({preventDefault(){}});
+ assert.equal(a.run('s.saved.age'),'28');assert.equal(a.run('s.queue'),false);
+ a.run("act('save')");assert.equal(a.run('s.saved'),null);assert.equal(a.run('s.queue'),false);
+});
+test('Tin tiếp theo không làm mất thông báo ưu tiên của ca nguy hiểm',()=>{
+ const a=app();a.run("init('danger');receive('Tôi đang chờ xe')");
+ assert.equal(a.run('s.result.route'),'emergency');assert.equal(a.run('s.queue'),true);assert.equal(a.run('s.facts.age'),'70');
+ a.run("receive('Tôi cần cung cấp thông tin gì?')");assert.equal(a.run('s.result.route'),'emergency');assert.equal(a.run('s.queue'),true);
+});
+test('Tin cảm ơn không gỡ ca đã nhận hoặc khởi động lại thời hạn',()=>{
+ const a=app();a.run("init('normal');act('accept');receive('Cảm ơn')");
+ assert.equal(a.run('s.queue'),true);assert.equal(a.run('s.accepted'),true);
+});
