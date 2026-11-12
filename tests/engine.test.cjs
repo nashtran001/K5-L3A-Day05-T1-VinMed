@@ -25,3 +25,29 @@ test('Không sửa đối tượng facts đầu vào',()=>{const f=emptyFacts();
 test('Thông tin sửa ưu tiên hơn tuổi trong tin cũ',()=>assert.equal(classify('Mình 28 tuổi đau họng',{...full,age:'2'},{corrected:true}).route,'handoff'));
 test('Thời gian kéo dài trong tin nhắn chuyển người',()=>assert.equal(classify('Mình đau họng 10 ngày',full).route,'handoff'));
 test('Thời gian kéo dài trong form chuyển người',()=>assert.equal(classify('Đau họng',{...full,duration:'2 tuần'}).route,'handoff'));
+
+test('AI trả lời câu hỏi chuẩn bị thông tin bằng quy trình, không gợi ý thuốc',()=>{
+ const r=classify('Tôi cần cung cấp thông tin gì trước khi hỏi thuốc?');
+ assert.equal(r.route,'info');assert.ok(r.text.includes('không cần chờ'));
+});
+test('Hướng dẫn quyền riêng tư chưa thực thi lưu hồ sơ',()=>assert.equal(classify('Cho mình xem ghi chú trước khi đồng ý lưu.').route,'privacy'));
+test('Không hiểu tuổi thai thành thời gian triệu chứng',()=>{
+ const r=classify('Mình đang bầu 3 tháng, bị cảm sổ mũi 2 hôm');
+ assert.equal(r.route,'handoff');assert.equal(r.facts.duration,'2 hom');assert.ok(!r.text.includes('Triệu chứng đã kéo dài'));
+});
+test('Không hiểu tháng tuổi của bé thành thời gian triệu chứng',()=>{
+ const r=classify('Con mình 2 tháng tuổi bị ho 2 ngày');
+ assert.equal(r.route,'handoff');assert.equal(r.facts.duration,'2 ngay');assert.ok(!r.text.includes('Triệu chứng đã kéo dài'));
+});
+test('Thông tin phủ định rõ không bị coi là bệnh nền hoặc dị ứng',()=>{
+ const r=classify('Mình 28 tuổi đau họng 2 ngày, không mang thai, không dùng thuốc, không bệnh nền, không dị ứng');
+ assert.equal(r.route,'review');assert.equal(r.facts.conditions,'Không');assert.equal(r.facts.meds,'Không');
+});
+test('Không hỏi lại tuổi đã có, chỉ hỏi mục thiếu kế tiếp',()=>{
+ const r=classify('Mình 28 tuổi đau họng 2 ngày');
+ assert.equal(r.route,'screen');assert.equal(r.missing[0],'mang thai / cho con bú');assert.ok(!r.text.includes('bao nhiêu tuổi'));
+});
+test('Ghi Chưa rõ trong form không đủ để chuyển nháp',()=>{
+ const r=classify('Đau họng',{...full,meds:'Chưa rõ',conditions:'Chưa rõ'});
+ assert.equal(r.route,'screen');
+});

@@ -21,7 +21,9 @@ Vào **http://127.0.0.1:4173**. Dừng server bằng Ctrl+C.
 - [prototype/README.md](prototype/README.md): vị trí tương tác, chú thích và giới hạn.
 - [TEST-REPORT.md](TEST-REPORT.md): kết quả kiểm tra và phần chưa kiểm tra.
 
-Hai màn hình: **Hỏi dược sĩ** và **Bàn dược sĩ**, cùng trạng thái trong một trang. Có 7 ca chọn nhanh và ô nhập ca lạ, sàng lọc, sửa thông tin, thu hồi, duyệt/từ chối, hoàn tác chuyển, thử quá hạn, đồng ý lưu và xóa ghi chú.
+Hai màn hình: **Hỏi dược sĩ** và **Bàn dược sĩ**, cùng trạng thái trong một trang. Có 10 ca chọn nhanh và ô nhập ca lạ, sàng lọc, sửa thông tin, thu hồi, duyệt/từ chối, hoàn tác chuyển, thử quá hạn, đồng ý lưu và xóa ghi chú.
+
+Ba ca mới ở đầu danh sách cho thấy phần AI tự làm: **Cần chuẩn bị thông tin gì?**, **Bổ sung từng tin nhắn**, **Sửa, lưu và xóa ghi chú**. Hướng dẫn, tổng hợp và quản lý bản khai không cần dược sĩ; gợi ý sản phẩm vẫn cần dược sĩ duyệt. Xem H1–H5 trong `spec.md`.
 
 ## Kiểm tra
 
@@ -29,17 +31,9 @@ Hai màn hình: **Hỏi dược sĩ** và **Bàn dược sĩ**, cùng trạng th
 npm test
 ```
 
-Không có dependency ngoài, không cần `npm install`. Node 22+ hỗ trợ chế độ test không tạo process con dùng trong môi trường hiện tại.
+Không có dependency ngoài, không cần `npm install`. Dùng Node 22+; lệnh test là `node --test tests/*.test.cjs`, không dùng cờ `--test-isolation=none` vốn không có trên Node 22.
 
-## Cần nhóm hoàn tất trước khi nộp
-
-- Điền tên, mã học viên, bàn/zone và công việc thực tế ở đầu `spec.md`.
-- Xếp mức tự chủ độc lập rồi ghi ý kiến thực tế ba người ở §4.
-- Bấm thử trong trình duyệt; chụp 1–2 ảnh thật có nhãn ①–⑥ thay hình minh họa hiện có.
-- Demo và ghi ca lạ thực tế vào §7. Mỗi người giải thích được phần mình.
-- Kiểm tra repo công khai bằng cửa sổ ẩn danh; nộp link trước **23:59 ngày 12/11/2026, giờ Việt Nam**, theo kênh giảng viên công bố.
-
-Mã nguồn được xây tại repo nộp mới, không clone/fork đề. Agent chưa push, chưa xác minh repo public hoặc bật GitHub Pages. Có thể phục vụ thư mục `prototype/` bằng bất kỳ static host nào nếu nhóm muốn link web.
+Mã nguồn được xây tại repo nộp mới, không clone/fork đề. Prototype chạy local; có thể phục vụ thư mục `prototype/` bằng static host nếu cần link web.
 
 Toàn bộ dữ liệu, sản phẩm, dược sĩ và tác vụ đều mô phỏng. Không có lời gọi AI thật; không chẩn đoán, giao dịch hay lưu hồ sơ bên ngoài. Không nhập sức khỏe thật. VinMed không liên kết với Pharmacity; đề lấy kênh chat của chuỗi làm bối cảnh.
 

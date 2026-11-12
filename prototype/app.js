@@ -1,5 +1,8 @@
 const $=s=>document.querySelector(s), E=VinMedEngine;
 const cases=[
+ {id:'screening-help',icon:'✓',title:'Cần chuẩn bị thông tin gì?',sub:'AI tự hướng dẫn · không phải chờ',message:'Tôi cần cung cấp những thông tin gì trước khi hỏi thuốc?'},
+ {id:'screening-chat',icon:'✎',title:'Bổ sung từng tin nhắn',sub:'Happy path · tổng hợp thông tin',message:'Mình đau họng 2 ngày, có thuốc gì không?'},
+ {id:'profile',icon:'♧',title:'Sửa, lưu và xóa ghi chú',sub:'Khách tự kiểm soát · không cần dược sĩ',message:'Cho mình xem ghi chú trước khi đồng ý lưu.',facts:{age:'28',pregnancy:'unknown',meds:'',conditions:'',duration:''}},
  {id:'child',icon:'♧',title:'Thuốc cho bé 2 tuổi',sub:'Thiếu thông tin · chuyển người',message:'Con mình 2 tuổi bị ho 2 ngày, có thuốc gì không?'},
  {id:'danger',icon:'♡',title:'Dấu hiệu nguy hiểm',sub:'Ưu tiên ngay · không chờ chat',message:'Ba mình 70 tuổi đau ngực, khó thở, mua giúp thuốc với.'},
  {id:'normal',icon:'✧',title:'Đau họng thông thường',sub:'Sàng lọc · dược sĩ duyệt',message:'Mình 28 tuổi đau rát họng 2 ngày nay, có thuốc gì không?',facts:{age:'28',pregnancy:'no',meds:'Không',conditions:'Không',duration:'2 ngày'}},
@@ -15,21 +18,45 @@ function log(text){s.logs.push({at:new Date().toLocaleTimeString('vi-VN'),text})
 function msg(text,type='ai'){s.messages.push({text,type});}
 function init(id){const c=cases.find(c=>c.id===id);s={caseId:id||'',facts:E.emptyFacts(),messages:[],logs:[],result:null,queue:false,accepted:false,expired:false,approved:false,rejected:false,saved:null,deadline:0,view:'customer',revision:0};if(c){s.facts={...s.facts,...c.facts};receive(c.message,true)}else{msg('Chào bạn, mình là trợ lý AI mô phỏng. Mình có thể hỏi sàng lọc và chuyển dược sĩ; gợi ý sản phẩm cần dược sĩ duyệt. Bạn đang hỏi cho ai và người đó bao nhiêu tuổi?')}render()}
 function revoke(){s.revision++;s.approved=false;s.rejected=false;s.accepted=false;s.expired=false;s.deadline=0;s.queue=false;log('Thu hồi bản nháp/gợi ý cũ; tăng phiên bản thông tin.');}
-function evaluate(text,corrected=false){const r=E.classify(text,s.facts,{corrected});s.result=r;s.facts=r.facts;msg(r.text,r.route==='emergency'?'alert':'ai');log(`${r.rule}: ${r.reason}`);if(['emergency','prescription','handoff','review'].includes(r.route)){s.queue=true;s.deadline=Date.now()+120000;log(r.route==='emergency'?'Đã tạo thông báo cấp cứu mô phỏng ngay, không đưa vào hàng chờ thường.':'Đã tạo ca ở bàn dược sĩ mô phỏng; hạn nhận ca 120 giây.')}}
-function receive(text,keepFixture=false){if(!text.trim())return;revoke();if(!keepFixture)s.facts=E.emptyFacts();msg(text,'user');s.lastInput=text;evaluate(text);render()}
+function evaluate(text,corrected=false){const r=E.classify(text,s.facts,{corrected});s.result=r;s.facts=r.facts;msg(r.text,r.route==='emergency'?'alert':'ai');log(`${r.rule}: ${r.reason}`);if(['emergency','prescription','handoff','review'].includes(r.route)&&!s.queue){s.queue=true;s.deadline=Date.now()+120000;log(r.route==='emergency'?'Đã tạo thông báo cấp cứu mô phỏng ngay, không đưa vào hàng chờ thường.':'Đã tạo ca ở bàn dược sĩ mô phỏng; hạn nhận ca 120 giây.')}}
+function receive(text,keepFixture=false){
+ if(!text.trim())return;
+ const direct=E.classify(text);
+ // Process/privacy questions do not erase or downgrade an active clinical case.
+ if(['info','privacy'].includes(direct.route)){
+  msg(text,'user');msg(direct.text);log(direct.rule);
+  if(!s.lastInput)s.result={...direct,facts:{...s.facts}};
+  render();return;
+ }
+ if(/^(cam on(?: ban)?|vang|da|toi dang cho xe)[.!\s]*$/.test(E.normalize(text))){
+  msg(text,'user');msg(s.result?.route==='emergency'?'Cảnh báo trước vẫn có hiệu lực. Đừng chờ phản hồi trong chat để tìm hỗ trợ cấp cứu.':'Mình vẫn giữ thông tin và trạng thái ca hiện tại. Bạn có thể bổ sung hoặc sửa khi cần.');render();return;
+ }
+ const newPatient=Boolean(s.lastInput)&&/ban minh|nguoi khac|(?:thuoc|hoi) (?:nay )?cho |doi nguoi dung/.test(E.normalize(text));
+ if(newPatient&&s.result?.route==='emergency'){
+  msg(text,'user');msg('Ca nguy hiểm trước vẫn cần được xử lý. Nếu đây là người dùng thuốc khác, hãy chọn Phiên mới; tin nhắn này không gỡ cảnh báo và thông báo ưu tiên hiện có.');render();return;
+ }
+ const base=newPatient?E.emptyFacts():s.facts;
+ const nextFacts=E.extractFacts(text,base);
+ const changed=JSON.stringify(nextFacts)!==JSON.stringify(s.facts);
+ if(newPatient||changed||keepFixture||!s.lastInput)revoke();
+ if(newPatient){s.lastInput='';s.saved=null;msg('Đang hỏi cho người khác: đã bỏ các trường và ghi chú người trước. Bạn cần cung cấp lại thông tin; gợi ý cũ không còn áp dụng.','system');}
+ s.facts=nextFacts;msg(text,'user');s.lastInput=s.lastInput?s.lastInput+'\n'+text:text;
+ // Parse new facts only from the new message; retain earlier symptom context.
+ evaluate(s.lastInput,true);render();
+}
 function render(){
  $('#scenarios').innerHTML=cases.map(c=>`<button class="scenario ${c.id===s.caseId?'active':''}" data-case="${c.id}"><span class="case-icon">${c.icon}</span><span><b>${c.title}</b><small>${c.sub}</small></span></button>`).join('');
  $('#chat').innerHTML='<div class="day-label">PHIÊN MÔ PHỎNG · DỮ LIỆU GIẢ</div>'+s.messages.map(m=>`<div class="message ${m.type}">${['ai','alert'].includes(m.type)?'<div class="who">VINMED · TRỢ LÝ AI MÔ PHỎNG</div>':''}${esc(m.text)}</div>`).join('');
  $('#chat').scrollTop=$('#chat').scrollHeight;
  const r=s.result,route=r?.route;
- const labels={emergency:['Cần hỗ trợ ngay','red'],handoff:['Cần dược sĩ kiểm tra','amber'],prescription:['Ngoài thẩm quyền AI','red'],source:['Chưa có dữ liệu xác minh','amber'],unknown:['Chưa hiểu đủ tình huống','amber'],screen:['Chưa đủ thông tin','amber'],review:['Đủ trường · chưa xác minh','green']};const label=labels[route]||['Chưa có thông tin','amber'];
+ const labels={info:['AI tự hỗ trợ quy trình','green'],privacy:['Bạn kiểm soát ghi chú','green'],emergency:['Cần hỗ trợ ngay','red'],handoff:['Cần dược sĩ kiểm tra','amber'],prescription:['Ngoài thẩm quyền AI','red'],source:['Chưa có dữ liệu xác minh','amber'],unknown:['Chưa hiểu đủ tình huống','amber'],screen:['Chưa đủ thông tin','amber'],review:['Đủ trường · chưa xác minh','green']};const label=labels[route]||['Chưa có thông tin','amber'];
  $('#risk-status').innerHTML=`<span class="badge ${label[1]}">${label[0]}</span><div class="small muted">${esc(r?.reason||'AI sẽ hỏi trước khi đưa ra quyết định.')}</div>`;
  const facts=[['Người dùng thuốc',s.facts.age!==''?`${s.facts.age} tuổi`:'Chưa rõ'],['Thai / cho con bú',{unknown:'Chưa rõ',no:'Không',yes:'Có'}[s.facts.pregnancy]],['Thuốc đã/đang dùng',s.facts.meds||'Chưa rõ'],['Bệnh nền / dị ứng',s.facts.conditions||'Chưa rõ'],['Thời gian',s.facts.duration||'Chưa rõ']];
  $('#facts').innerHTML=facts.map(([a,b])=>`<div class="fact"><dt>${a}</dt><dd>${esc(b)}</dd></div>`).join('');
  $('#evidence').innerHTML=`<b>${esc(r?.rule||'T1 · giới hạn hệ thống')}</b><p>Căn cứ: tin nhắn và các trường khách vừa cung cấp, chưa được dược sĩ xác minh. Không dùng phần trăm chắc chắn giả.</p><p>Chính sách học tập từ Track 1: nhóm dễ tổn thương → dược sĩ; dấu hiệu nguy hiểm → hỗ trợ ngay; không tự chỉ liều.</p><p>Không có kết nối tồn kho, dữ liệu lâm sàng hoặc nhà thuốc thật.</p>`;
  let actions='';
  if(route==='emergency')actions+='<button class="danger" data-action="emergency">Tôi hiểu · sẽ tìm hỗ trợ cấp cứu</button>';
- if(['screen','unknown'].includes(route))actions+='<button class="primary" data-action="edit">Bổ sung thông tin</button>';
+ if(['info','privacy','screen','unknown'].includes(route))actions+='<button class="primary" data-action="edit">'+(route==='privacy'?'Xem / sửa các trường':'Bổ sung thông tin')+'</button>';
  if(s.queue&&route!=='emergency')actions+=`<button class="secondary" data-action="staff">${s.accepted?'Dược sĩ đã nhận ca':'Xem ca đã chuyển'} <span class="number">5</span></button><button class="text-button" data-action="undo">Hoàn tác chuyển ca</button>`;
  else if(!s.queue)actions+='<button class="secondary" data-action="handoff">Gặp dược sĩ</button>';
  actions+='<button class="text-button" data-action="save">'+(s.saved?'Xem / xóa ghi chú':'Lưu ghi chú (cần đồng ý)')+' <span class="number">6</span></button>';
@@ -73,6 +100,6 @@ $('#chat-form').addEventListener('submit',e=>{e.preventDefault();const input=$('
 $('#message').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('#chat-form').requestSubmit()}});
 $('#correct').onclick=openEdit;$('#reset').onclick=()=>{init();notify('Đã xóa dữ liệu phiên và hồ sơ mô phỏng.');};$('#annotations').onchange=e=>document.body.classList.toggle('no-annotations',!e.target.checked);
 $('#close-edit').onclick=()=>$('#edit-dialog').close();$('#close-save').onclick=()=>$('#save-dialog').close();
-$('#edit-form').onsubmit=e=>{e.preventDefault();const f=e.target;revoke();for(const k of ['age','pregnancy','meds','conditions','duration'])s.facts[k]=f.elements[k].value.trim();msg(`Mình sửa thông tin: người dùng ${s.facts.age} tuổi; thai/cho bú: ${{unknown:'chưa rõ',yes:'có',no:'không'}[s.facts.pregnancy]}.`,'user');msg('Mình đã cập nhật và thu hồi bản nháp/gợi ý cũ. Những gợi ý trước đó không còn áp dụng cho thông tin vừa sửa.','system');$('#edit-dialog').close();evaluate(s.lastInput||'Đau họng',true);render()};
+$('#edit-form').onsubmit=e=>{e.preventDefault();const f=e.target;revoke();for(const k of ['age','pregnancy','meds','conditions','duration'])s.facts[k]=f.elements[k].value.trim();msg(`Mình sửa thông tin: người dùng ${s.facts.age} tuổi; thai/cho bú: ${{unknown:'chưa rõ',yes:'có',no:'không'}[s.facts.pregnancy]}.`,'user');msg('Mình đã cập nhật và thu hồi bản nháp/gợi ý cũ. Những gợi ý trước đó không còn áp dụng cho thông tin vừa sửa.','system');$('#edit-dialog').close();if(s.lastInput)evaluate(s.lastInput,true);else{s.result={...E.classify('Tôi cần cung cấp thông tin gì?'),facts:{...s.facts}};msg('Đã cập nhật các trường bạn cung cấp trong phiên. Chưa lưu hồ sơ, chưa yêu cầu tư vấn hay chuyển dược sĩ. Bạn có thể kiểm tra và chọn lưu riêng.');}render()};
 $('#consent-form').onsubmit=e=>{e.preventDefault();if(!$('#consent-check').checked)return;s.saved={...s.facts};log('Khách đồng ý rõ ràng; lưu ghi chú mô phỏng trong bộ nhớ.');msg('Đã lưu ghi chú mô phỏng sau khi bạn đồng ý. Bạn có thể bấm “Xem / xóa ghi chú” để xóa; tải lại hoặc Phiên mới cũng xóa dữ liệu.','system');$('#save-dialog').close();render()};
 init('child');
